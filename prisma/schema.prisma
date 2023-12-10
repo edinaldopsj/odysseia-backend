@@ -1,0 +1,66 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model user {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  code String?
+
+  trips trip[]
+}
+
+model trip {
+  id          Int        @id @default(autoincrement())
+  startDate   DateTime
+  endDate     DateTime
+  destination String
+  status      tripstatus @default(CREATED)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  diary diary[]
+
+  userId Int
+  user   user @relation(fields: [userId], references: [id])
+}
+
+model diary {
+  id          Int       @id @default(autoincrement())
+  date        DateTime
+  description String
+  location    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Many-to-one relationship with Trip
+  trip   trip @relation(fields: [tripId], references: [id])
+  tripId Int
+
+  media media[] // One-to-many relationship with Media
+}
+
+model media {
+  id   Int    @id @default(autoincrement())
+  path String
+
+  diary   diary @relation(fields: [diaryId], references: [id])
+  diaryId Int
+}
+
+// Enum to define possible status values for Trip
+enum tripstatus {
+  CREATED
+  INPROGRESS
+  FINISHED
+}
