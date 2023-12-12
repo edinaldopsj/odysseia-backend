@@ -1,4 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
+import { CloudinaryService } from './cloudinary.service';
+import { JwtGuard } from 'src/auth/guard';
 
 @Controller('cloudinary')
-export class CloudinaryController {}
+@UseGuards(JwtGuard)
+export class CloudinaryController {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
+}

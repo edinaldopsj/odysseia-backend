@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDiaryDto, UpdateDiaryDto } from './dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class DiaryService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   async getDiaries(tripId: number) {
     return this.prismaService.diary.findMany({
@@ -42,6 +46,28 @@ export class DiaryService {
         data: dto,
       });
     }
+  }
+
+  async updateDiaryImage(
+    tripId: number,
+    diaryId: number,
+    file: Express.Multer.File,
+  ) {
+    const image = await this.cloudinaryService.uploadFile(file);
+
+    if (!image.secure_url || !image.public_id) {
+      throw new NotFoundException('Unable to upload image to cloudinary');
+    }
+
+    return this.prismaService.diary.update({
+      where: {
+        id: diaryId,
+        tripId,
+      },
+      data: {
+        imgUrl: image.secure_url,
+      },
+    });
   }
 
   async deleteDiaryEntry(tripId: number, diaryId: number) {
